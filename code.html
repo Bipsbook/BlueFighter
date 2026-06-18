@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blue Fighter™</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+    body { background: radial-gradient(circle at 50% 50%, #0a0f18, #020408); font-family: 'Inter', 'Arial', sans-serif; overflow: hidden; position: relative; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #000; color: #e2e8f0; }
+    canvas { display: block; box-shadow: 0 0 60px rgba(14, 165, 233, 0.15); border-radius: 8px; }
+    .store-scroll { max-height: 55vh; overflow-y: auto; padding-right: 15px; margin-bottom: 20px; }
+    .store-scroll::-webkit-scrollbar { width: 8px; } .store-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; } .store-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #38bdf8, #818cf8); border-radius: 10px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    input { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(16px); justify-content: center; align-items: center; z-index: 100; animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; backdrop-filter: blur(0); } to { opacity: 1; backdrop-filter: blur(16px); } }
+    .modal { background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.9)); padding: 40px 35px; border-radius: 32px; text-align: center; max-width: 460px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border: 1px solid rgba(56,189,248,0.2); transform: scale(0.95); animation: modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; color: #f8fafc; }
+    @keyframes modalPop { to { transform: scale(1); } }
+    .modal h2 { font-size: 34px; font-weight: 800; color: #fff; text-shadow: 0 0 15px rgba(56,189,248,0.6); margin-bottom: 12px; letter-spacing: 1px; }
+    .modal p { font-size: 16px; color: #94a3b8; margin-bottom: 28px; line-height: 1.5; }
+    .btn { display: block; width: 100%; padding: 16px 20px; margin: 14px 0; border: none; border-radius: 16px; cursor: pointer; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; color: white; outline: none; text-align: center; text-decoration: none; position: relative; overflow: hidden; }
+    .btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: 0.5s; }
+    .btn:hover::before { left: 100%; } .btn:hover { transform: translateY(-3px); } .btn:active { transform: translateY(1px); }
+    .play-btn { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); } .play-btn:hover { background: rgba(16, 185, 129, 0.2); box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); }
+    .restart-btn { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); } .restart-btn:hover { background: rgba(239, 68, 68, 0.2); box-shadow: 0 0 25px rgba(239, 68, 68, 0.4); }
+    .save-btn { background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); } .save-btn:hover { background: rgba(245, 158, 11, 0.2); box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); }
+    .settings-btn { background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); } .settings-btn:hover { background: rgba(56, 189, 248, 0.2); box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); }
+    .update-btn { background: rgba(139, 92, 246, 0.1); border: 1px solid #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); } .update-btn:hover { background: rgba(139, 92, 246, 0.2); box-shadow: 0 0 25px rgba(139, 92, 246, 0.4); }
+    .store-btn { background: rgba(217, 70, 239, 0.1); border: 1px solid #d946ef; box-shadow: 0 0 15px rgba(217, 70, 239, 0.2); } .store-btn:hover { background: rgba(217, 70, 239, 0.2); box-shadow: 0 0 25px rgba(217, 70, 239, 0.4); }
+    .level-select-btn { background: rgba(6, 182, 212, 0.1); border: 1px solid #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); } .level-select-btn:hover { background: rgba(6, 182, 212, 0.2); box-shadow: 0 0 25px rgba(6, 182, 212, 0.4); }
+    .slider-container { text-align: left; margin: 20px 0; color: #cbd5e1; font-weight: 600; }
+    input[type="range"] { width: 100%; margin-top: 12px; accent-color: #38bdf8; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
+    .mode-buttons { display: flex; gap: 15px; margin: 20px 0; }
+    .mode-btn { flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #94a3b8; font-weight: bold; cursor: pointer; text-align: center; transition: 0.3s; }
+    .mode-btn.active { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+    .corner-btn { position: fixed; top: 20px; left: 20px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 50px; padding: 10px 24px; color: #38bdf8; font-weight: bold; font-size: 16px; cursor: pointer; z-index: 150; display: flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+    .corner-btn:hover { background: rgba(56, 189, 248, 0.1); box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); color: #fff; }
+    .corner-btn-right { position: fixed; top: 20px; right: 20px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 50px; padding: 10px 24px; color: #fcd34d; font-weight: bold; font-size: 16px; cursor: pointer; z-index: 150; display: flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+    .corner-btn-right:hover { background: rgba(245, 158, 11, 0.1); box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); color: #fff; }
+    .weapon-switch-btn { position: fixed; top: 80px; right: 20px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(56, 189, 248, 0.5); border-radius: 50px; padding: 10px 24px; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; z-index: 150; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+    .weapon-switch-btn:hover { background: rgba(56, 189, 248, 0.2); box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); }
+    .mobile-pause-btn { position: fixed; top: 20px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: #38bdf8; cursor: pointer; z-index: 200; box-shadow: 0 0 20px rgba(56,189,248,0.2); transition: 0.2s; }
+    .mobile-pause-btn:active { transform: scale(0.92); }
+    @media (max-width: 700px) { .mobile-pause-btn { width: 48px; height: 48px; font-size: 20px; } .corner-btn, .corner-btn-right, .weapon-switch-btn { padding: 8px 16px; font-size: 14px; } .weapon-switch-btn { top: 70px; } }
+    .corner-btn.hide, .corner-btn-right.hide, .weapon-switch-btn.hide { display: none; }
+    .virtual-controller { position: fixed; bottom: 30px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 30px; pointer-events: none; z-index: 200; }
+    .ctrl-left, .ctrl-right { display: flex; gap: 20px; pointer-events: auto; }
+    .ctrl-btn { width: 75px; height: 75px; border-radius: 50%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(10px); border: 2px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: rgba(255,255,255,0.8); cursor: pointer; box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: 0.1s; }
+    .ctrl-btn:active { transform: scale(0.9); background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #fff; box-shadow: 0 0 30px rgba(56, 189, 248, 0.5); }
+    @media (max-width: 700px) { .ctrl-btn { width: 60px; height: 60px; font-size: 24px; } }
+    .social-modal { max-width: 480px; padding: 35px 30px; } .profile-header { text-align: center; margin-bottom: 25px; } .avatar-container { position: relative; display: inline-block; margin-bottom: 15px; } .avatar { width: 110px; height: 110px; background: linear-gradient(145deg, #1e293b, #0f172a); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 46px; font-weight: bold; color: white; border: 3px solid #38bdf8; box-shadow: 0 0 25px rgba(56,189,248,0.3); cursor: pointer; transition: 0.3s; } .avatar:hover { transform: scale(1.05); } .avatar-edit-icon { position: absolute; bottom: 0; right: 0; background: #38bdf8; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #0f172a; font-weight: bold; border: 2px solid #0f172a; cursor: pointer; } .profile-stats { display: flex; gap: 15px; justify-content: center; margin: 25px 0; } .stat-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border-radius: 20px; padding: 15px 20px; text-align: center; min-width: 120px; border: 1px solid rgba(255,255,255,0.1); } .stat-value { font-size: 32px; font-weight: 800; color: #fcd34d; line-height: 1.2; text-shadow: 0 0 10px rgba(245,158,11,0.4); } .stat-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; } .profile-settings { margin: 25px 0; } .setting-row { margin-bottom: 20px; text-align: left; } .setting-row label { display: block; font-weight: 600; margin-bottom: 8px; color: #38bdf8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; } .setting-row input[type="text"] { width: 100%; padding: 14px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; font-size: 16px; outline: none; transition: 0.3s; } .setting-row input[type="text"]:focus { border-color: #38bdf8; box-shadow: 0 0 15px rgba(56,189,248,0.2); } .modal-buttons { display: flex; gap: 15px; margin-top: 25px; } .modal-buttons .btn { margin: 0; flex: 1; } .emoji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 10px; } .emoji-option { font-size: 32px; text-align: center; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 16px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; } .emoji-option:hover { background: rgba(56,189,248,0.1); border-color: rgba(56,189,248,0.4); transform: scale(1.1); }
+    .store-modal { max-width: 520px; } .store-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); margin: 15px 0; padding: 15px 20px; border-radius: 20px; gap: 15px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; } .store-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); } .store-item-info { flex: 2; text-align: left; } .store-item-info strong { color: #f8fafc; font-size: 16px; } .store-item-info small { color: #94a3b8; font-size: 13px; } .store-item-price { font-weight: bold; color: #fcd34d; font-size: 18px; text-shadow: 0 0 10px rgba(245,158,11,0.3); } .store-buy-btn { background: rgba(16,185,129,0.1); border: 1px solid #10b981; padding: 10px 20px; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; } .store-buy-btn:hover:not(:disabled) { background: rgba(16,185,129,0.3); box-shadow: 0 0 15px rgba(16,185,129,0.4); } .store-buy-btn:disabled { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #64748b; cursor: not-allowed; } .toast-notification { position: fixed; top: 80px; right: 20px; background: rgba(15,23,42,0.9); backdrop-filter: blur(10px); color: white; padding: 14px 24px; border-radius: 16px; font-size: 16px; font-weight: 600; z-index: 300; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); animation: slideInRight 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; pointer-events: none; } .toast-notification.success { border-left: 4px solid #10b981; } .toast-notification.error { border-left: 4px solid #ef4444; } @keyframes slideInRight { from { opacity: 0; transform: translateX(100px) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } } .toast-fade-out { animation: fadeOutRight 0.4s ease-in forwards; } @keyframes fadeOutRight { to { opacity: 0; transform: translateX(100px) scale(0.9); visibility: hidden; } } .store-coins-header { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 20px; padding: 10px 24px; margin-bottom: 25px; display: inline-block; font-size: 22px; font-weight: bold; color: #fcd34d; text-shadow: 0 0 15px rgba(245,158,11,0.4); } .skin-preview { width: 44px; height: 44px; border-radius: 50%; margin-right: 12px; display: inline-block; vertical-align: middle; box-shadow: 0 0 10px rgba(0,0,0,0.5); } .level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 15px; max-height: 60vh; overflow-y: auto; padding: 10px; margin-bottom: 20px; } .level-grid::-webkit-scrollbar { width: 6px; } .level-grid::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 10px; } .level-card { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 15px 10px; text-align: center; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.2s; border: 1px solid rgba(255,255,255,0.1); } .level-card.unlocked { background: rgba(56,189,248,0.1); color: #38bdf8; border-color: rgba(56,189,248,0.3); } .level-card.locked { background: rgba(0,0,0,0.3); color: #475569; cursor: not-allowed; } .level-card.unlocked:hover { transform: translateY(-3px); background: rgba(56,189,248,0.2); box-shadow: 0 5px 15px rgba(56,189,248,0.3); color: #fff; } .level-card.current { border: 2px solid #fcd34d; box-shadow: 0 0 20px rgba(245,158,11,0.4); color: #fcd34d; } .lock-icon { font-size: 14px; display: block; margin-top: 4px; opacity: 0.5; } @keyframes stardropPulse { 0% { transform: scale(1); filter: drop-shadow(0 0 10px #fcd34d); } 50% { transform: scale(1.15); filter: drop-shadow(0 0 30px #fcd34d); } 100% { transform: scale(1); filter: drop-shadow(0 0 10px #fcd34d); } } .stardrop-anim { animation: stardropPulse 0.6s infinite ease-in-out; display: inline-block; } hr { border-color: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+<button id="accountCornerBtn" class="corner-btn">Профиль</button>
+<button id="inviteCornerBtn" class="corner-btn-right">Пригласить</button>
+<button id="weaponSwitchBtn" class="weapon-switch-btn hide">👊 Рукопашная</button>
+<button id="mobilePauseBtn" class="mobile-pause-btn" style="display: none;">II</button>
+
+<div id="menuOverlay" class="overlay" style="display: flex;">
+    <div class="modal">
+        <h2>Blue Fighter™</h2>
+        <button class="btn play-btn" id="loadGameBtn">Продолжить</button>
+        <button class="btn play-btn" id="newGameBtn">Новая игра</button>
+        <button class="btn level-select-btn" id="levelSelectMenuBtn">Выбор уровня</button>
+        <button class="btn settings-btn" id="moreMenuBtn">Ещё</button>
+        <p style="margin-top:20px; font-size:12px; opacity:0.5;">Bipsbook 2026 ©</p>
+    </div>
+</div>
+
+<div id="moreOverlay" class="overlay">
+    <div class="modal">
+        <h2>Ещё</h2>
+        <button class="btn store-btn" id="storeMenuBtn">Магазин</button>
+        <a class="btn update-btn" id="updateBtn" href="https://t.me/Bipsbook" target="_blank">Наш Telegram канал</a>
+        <button class="btn play-btn" id="closeMoreBtn">Назад</button>
+    </div>
+</div>
+
+<div id="levelSelectOverlay" class="overlay">
+    <div class="modal" style="max-width: 600px;">
+        <h2>Выбор уровня</h2>
+        <p>Доступны только пройденные уровни</p>
+        <div id="levelGridContainer" class="level-grid"></div>
+        <button class="btn play-btn" id="closeLevelSelectBtn">Закрыть</button>
+    </div>
+</div>
+
+<div id="storeOverlay" class="overlay">
+    <div class="modal store-modal">
+        <h2>Магазин</h2>
+        <div style="text-align: center;"><span class="store-coins-header" id="storeCoinsDisplay">⭐ 0</span></div>
+        <div class="store-scroll">
+            <div id="storeItemsList"></div><hr style="margin: 20px 0;"><h3 style="color:#38bdf8; margin-bottom:15px;">🎨 Скины</h3>
+            <div id="skinsList"></div><hr style="margin: 20px 0;"><h3 style="color:#38bdf8; margin-bottom:15px;">🔫 Оружие и Предметы</h3>
+            <div id="weaponSection"></div>
+        </div>
+        <button class="btn play-btn" id="closeStoreBtn">Закрыть</button>
+    </div>
+</div>
+
+<div id="stardropOverlay" class="overlay">
+    <div class="modal">
+        <h2 id="stardropRarity" style="color:#fcd34d;">Стардроп</h2>
+        <div id="stardropReward" style="font-size: 70px; margin: 40px;">📦</div>
+        <button class="btn play-btn" id="closeStardropBtn">Забрать</button>
+    </div>
+</div>
+
+<div id="newGameWarningOverlay" class="overlay">
+    <div class="modal">
+        <h2 style="color:#ef4444;">Внимание!</h2><p>Действительно хочешь начать новую игру?<br>Весь прогресс уровней будет потерян!</p>
+        <button class="btn restart-btn" id="confirmNewGameBtn">Да, начать заново</button><button class="btn play-btn" id="cancelNewGameBtn">Отмена</button>
+    </div>
+</div>
+
+<div id="accountOverlay" class="overlay">
+    <div class="modal social-modal">
+        <div class="profile-header"><div class="avatar-container"><div class="avatar" id="profileAvatar"><span id="avatarEmoji">⚔️</span></div><div class="avatar-edit-icon" id="editAvatarBtn">✎</div></div><h2 id="profileDisplayName">Игрок</h2></div>
+        <div class="profile-stats"><div class="stat-card"><div class="stat-value" id="statTotalCoins">0</div><div class="stat-label">Монеты</div></div><div class="stat-card"><div class="stat-value" id="statKills">0</div><div class="stat-label">Убито</div></div></div>
+        <div class="profile-settings">
+            <div class="setting-row"><label>Имя</label><input type="text" id="playerNameInput" maxlength="20"></div>
+            <div class="setting-row"><button type="button" id="changeNameColorBtn" class="btn settings-btn" style="padding:10px 16px; font-size:14px;">Изменить цвет имени</button></div>
+            <div class="slider-container" style="color: #38bdf8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Громкость музыки<input type="range" id="musicVolume" min="0" max="100" value="50"></div>
+            <div class="slider-container" style="color: #38bdf8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Управление
+                <div class="mode-buttons"><div class="mode-btn" data-mode="pc">ПК</div><div class="mode-btn" data-mode="mobile">Мобильное</div></div>
+            </div>
+        </div>
+        <div class="modal-buttons"><button class="btn save-btn" id="saveAccountBtn">Сохранить</button><button class="btn restart-btn" id="closeAccountBtn">Отмена</button></div>
+    </div>
+</div>
+
+<div id="avatarPickerOverlay" class="overlay"><div class="modal" style="max-width:320px"><h3 style="color:#fff; margin-bottom:15px;">Выбор Аватара</h3><div class="avatar-picker"><input type="color" id="avatarBgColor" value="#2c3e50" style="width:100%; height:40px; border:none; border-radius:8px; cursor:pointer;"><div class="emoji-grid" id="emojiGrid"></div></div><button class="btn play-btn" id="closeAvatarPickerBtn" style="margin-top:20px;">Закрыть</button></div></div>
+<div id="winOverlay" class="overlay"><div class="modal"><h2 style="color:#10b981;">Победа!</h2><p>Blue Fighter™ пройден!<br>Хочешь пройти игру заново?</p><button class="btn restart-btn" id="restartBtn">Начать заново</button></div></div>
+<div id="pauseOverlay" class="overlay"><div class="modal"><h2>Пауза</h2><button class="btn play-btn" id="resumeBtn">Продолжить</button><button class="btn save-btn" id="saveGamePauseBtn">Сохранить</button><button class="btn restart-btn" id="exitToMenuBtn">Выход в меню</button></div></div>
+
+<div id="instructionOverlay" class="overlay">
+    <div class="modal" style="max-width: 500px;">
+        <h2 style="color: #38bdf8;">Обучение</h2>
+        <div style="text-align:left; color:#cbd5e1; margin-bottom: 25px; font-size: 16px; line-height: 1.6;">
+            <p style="margin-bottom: 15px; font-weight: 600;">Выполни свои первые задания:</p>
+            <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 16px; border: 1px solid rgba(56,189,248,0.2);">
+                <p style="margin-bottom: 10px;"><strong>Освой движение:</strong> Стрелочки, A/D или кнопки на экране</p>
+                <p style="margin-bottom: 10px;"><strong>Научись прыгать:</strong> W, Вверх, Пробел или кнопка ⬆</p>
+                <p style="margin-bottom: 10px;"><strong>Сражайся:</strong> Жми ЛКМ или тап по врагу для атаки</p>
+                <p><strong>Главная цель:</strong> Заверши 1-й уровень и открой магазин!</p>
+            </div>
+        </div>
+        <button class="btn play-btn" id="startTutorialBtn">ОК</button>
+    </div>
+</div>
+
+<div id="noInternetOverlay" class="overlay"><div class="modal"><h2>Нет сети</h2><p>Игра работает оффлайн, но музыка может отсутствовать.</p><button class="btn play-btn" id="closeInternetWarningBtn">Понятно</button></div></div>
+<canvas id="gameCanvas"></canvas>
+<div id="virtualController" class="virtual-controller"><div class="ctrl-left"><div class="ctrl-btn" id="ctrlLeft">◀</div><div class="ctrl-btn" id="ctrlRight">▶</div></div><div class="ctrl-right"><div class="ctrl-btn" id="ctrlJump">⬆</div><div class="ctrl-btn" id="ctrlAttack">⚔</div></div></div>
+
+<script>
+const GAME_WIDTH = 1920, GAME_HEIGHT = 1080;
+let scaleFactor = 1;
+const canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+    const aspect = 16 / 9; let w = window.innerWidth, h = window.innerHeight;
+    if (w / h > aspect) w = h * aspect; else h = w / aspect;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    canvas.style.width = `${w}px`; canvas.style.height = `${h}px`;
+    scaleFactor = (w / GAME_WIDTH) * dpr;
+}
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+let laserEnemies = [], laserBeams = [], laserShieldExpiry = 0;
+let projectiles = [], mouseX = 0, mouseY = 0, attackAnimTimer = 0, attackAnimAngle = 0;
+const SETTINGS_KEY = 'blueFighterSettings', ACCOUNT_KEY = 'blueFighterAccount', SAVE_KEY = 'blueFighterSave', PROGRESS_KEY = 'blueFighterProgress'; 
+window.currentWeapon = 'melee';
+
+let settings = { musicVolume: 0.5, controlMode: 'pc' };
+let account = { playerName: "Bly", nameColor: "#ffffff", kills: 0, totalCoins: 0, upgrades: { speed:0, jump:0, attackRange:0, extraLife:0 }, currentSkin: "classic", ownedSkins: ["classic"], weaponOwned: false, iceGunOwned: false, bombOwned: false, hasShield: false };
+let lives = 3, maxLives = 3, isRespawning = false, gameStarted = false, isPaused = false;
+let coins = [], meat = [], totalCoins = 0, finishX = 0, enemies = [], particles = [];
+let currentLevel = 1, maxLevels = 200, maxUnlockedLevel = 1, levelAnnounce = { text: '', alpha: 0 }, loseFlashAlpha = 0, keys = {}, vLeft = false, vRight = false;
+let speedBonus = 1.0, jumpBonus = 1.0, attackRangeBonus = 1.0;
+
+const player = { x: 50, y: 0, width: 42, height: 42, vy: 0, gravity: 0.5, jumpPower: -12, isGrounded: true, baseSpeed: 5.4, baseAttackRange: 90 };
+
+function getAvailableWeapons() { let w = ['melee']; if(account.weaponOwned) w.push('meat'); if(account.iceGunOwned) w.push('ice'); if(account.bombOwned) w.push('bomb'); return w; }
+function toggleWeapon() { const weaps = getAvailableWeapons(); window.currentWeapon = weaps[(weaps.indexOf(window.currentWeapon) + 1) % weaps.length]; updateWeaponUI(); }
+function updateWeaponUI() {
+    const btn = document.getElementById('weaponSwitchBtn');
+    if(window.currentWeapon === 'melee') btn.innerHTML = '👊 Рукопашная';
+    else if(window.currentWeapon === 'meat') btn.innerHTML = '🔫 Мясо-базука';
+    else if(window.currentWeapon === 'ice') btn.innerHTML = '❄️ Ледо-бластер';
+    else if(window.currentWeapon === 'bomb') btn.innerHTML = '💣 Бомбомет';
+    const show = gameStarted && document.getElementById('menuOverlay').style.display !== 'flex' && getAvailableWeapons().length > 1;
+    btn.style.display = show ? 'flex' : 'none';
+}
+document.getElementById('weaponSwitchBtn').onclick = toggleWeapon;
+
+function loadProgress() { const saved = localStorage.getItem(PROGRESS_KEY); if (saved) { try { const p = JSON.parse(saved); if (p.maxUnlockedLevel) maxUnlockedLevel = Math.min(p.maxUnlockedLevel, maxLevels); } catch(e) {} } if (maxUnlockedLevel < 1) maxUnlockedLevel = 1; }
+function saveProgress() { localStorage.setItem(PROGRESS_KEY, JSON.stringify({ maxUnlockedLevel: maxUnlockedLevel })); }
+function unlockLevel(level) { if (level > maxUnlockedLevel && level <= maxLevels) { maxUnlockedLevel = level; saveProgress(); showToast(`🎉 Открыт уровень ${level}!`, false); } }
+function completeLevel() { if (currentLevel < maxLevels) unlockLevel(currentLevel + 1); else if (currentLevel === maxLevels) { maxUnlockedLevel = maxLevels; saveProgress(); } }
+function loadLevel(level) { if (level > maxUnlockedLevel) { showToast("Этот уровень ещё не открыт! Пройдите предыдущие.", true); return false; } currentLevel = level; totalCoins = 0; lives = maxLives; const data = generateLevel(currentLevel, GAME_WIDTH, GAME_HEIGHT); finishX = data.finishX; enemies = data.enemies; coins = data.coins; meat = data.meat; laserEnemies = data.laserEnemies; resetPlayer(); announceLevel(currentLevel % 5 === 0 ? "БОНУС УРОВЕНЬ!" : currentLevel); gameStarted = true; isPaused = false; document.getElementById('levelSelectOverlay').style.display = 'none'; document.getElementById('menuOverlay').style.display = 'none'; updateCornerButtonsVisibility(); updateMobilePauseButtonVisibility(); saveProgressToLocal(); updateWeaponUI(); return true; }
+function renderLevelSelect() { const container = document.getElementById('levelGridContainer'); if (!container) return; container.innerHTML = ''; for (let i = 1; i <= maxLevels; i++) { const unlocked = i <= maxUnlockedLevel; const card = document.createElement('div'); card.className = `level-card ${unlocked ? 'unlocked' : 'locked'}`; if (i === currentLevel && gameStarted) card.classList.add('current'); card.innerHTML = unlocked ? `${i}` : `${i}<span class="lock-icon">🔒</span>`; if (unlocked) { card.onclick = () => { if (gameStarted && !isPaused) { if (confirm('Начать уровень заново? Текущий прогресс не сохранится.')) loadLevel(i); } else { loadLevel(i); } }; } container.appendChild(card); } }
+function showToast(message, isError = false) { const toast = document.createElement('div'); toast.className = `toast-notification ${isError ? 'error' : 'success'}`; toast.innerHTML = `${isError ? '✗' : '✓'} ${message}`; document.body.appendChild(toast); setTimeout(() => { toast.classList.add('toast-fade-out'); setTimeout(() => toast.remove(), 400); }, 2000); }
+function applyUpgrades() { speedBonus = 1 + account.upgrades.speed * 0.2; jumpBonus = 1 + account.upgrades.jump * 0.2; attackRangeBonus = 1 + account.upgrades.attackRange * 0.2; player.speed = player.baseSpeed * speedBonus; player.jumpPower = -12 * jumpBonus; player.attackRange = player.baseAttackRange * attackRangeBonus; maxLives = 3 + account.upgrades.extraLife; if (lives > maxLives) lives = maxLives; }
+function triggerLoseFlash() { loseFlashAlpha = 0.6; }
+function createExplosion(cx,cy) { for(let i=0;i<12+Math.random()*10;i++){ const angle=Math.random()*Math.PI*2; const spd=2+Math.random()*4; particles.push({x:cx,y:cy,vx:Math.cos(angle)*spd,vy:Math.sin(angle)*spd,size:4+Math.random()*6,life:1,decay:0.015+Math.random()*0.02,color:`hsl(${Math.random()*60+180},90%,60%)`}); } }
+function updateParticles() { for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.08; p.life-=p.decay; if(p.life<=0||p.y>GAME_HEIGHT+50) particles.splice(i,1); } }
+function drawParticles() { ctx.save(); particles.forEach(p=>{ ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.shadowBlur=10; ctx.shadowColor=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2); ctx.fill(); }); ctx.restore(); }
+function announceLevel(levelText) { levelAnnounce = { text: typeof levelText === 'number' ? `Уровень ${levelText}` : levelText, alpha: 1.0 }; }
+function resetPlayer() { player.x=30; player.y=GAME_HEIGHT-80-player.height; player.vy=0; }
+
+function generateLevel(level, w, h) {
+    if (level % 5 === 0) { const finish = w * 0.8; const coinsArr = []; const groundY = h-80-20; for(let i=0;i<40;i++) coinsArr.push({ x: 50+Math.random()*(finish-100), y: groundY-10-Math.random()*150, width:20, height:20, active:true, type:'coin' }); window.initialCoinsCount = coinsArr.length; return { finishX: finish, enemies: [], coins: coinsArr, meat: [], laserEnemies: [] }; }
+    const finish = w * 0.6; const enemiesArr = []; const enemyCount = Math.max(2, Math.min(12, Math.floor(level / 1.2)));
+    for (let i=0;i<enemyCount;i++) { const x = 100 + Math.random() * (finish - 150); const speed = 1.2 + level * 0.12; const vx = Math.random()>0.5 ? speed : -speed; enemiesArr.push({ x, y: h-80-38, width:38, height:38, vx, alive:true, frozenUntil:0, hp: 3, maxHp: 3 }); }
+    const laserArr = [];
+    if (level >= 20) { const laserCount = Math.min(3, 1 + Math.floor(level / 25)); for (let i=0;i<laserCount;i++) { const x = 150 + Math.random() * (finish - 200); const speed = 0.8 + Math.random() * 0.7; const vx = Math.random()>0.5 ? speed : -speed; laserArr.push({ x, y: h-80-38, width:38, height:38, vx, alive:true, lastShot: performance.now() - Math.random() * 2000, shootCooldown: 2200, frozenUntil:0, hp: 3, maxHp: 3 }); } }
+    const coinsArr = []; const coinCount = 5 + Math.floor(Math.random() * 10) + Math.floor(level / 10); const groundY = h-80-20; for(let i=0;i<coinCount;i++) coinsArr.push({ x: 50+Math.random()*(finish-100), y: groundY-10-Math.random()*30, width:20, height:20, active:true, type:'coin' });
+    const meatArr = []; const meatCount = 3 + Math.floor(Math.random() * 8); for(let i=0;i<meatCount;i++) meatArr.push({ x: 50+Math.random()*(finish-100), y: groundY-10-Math.random()*30, width:20, height:20, active:true, type:'meat' });
+    window.initialCoinsCount = coinsArr.length; return { finishX: finish, enemies: enemiesArr, coins: coinsArr, meat: meatArr, laserEnemies: laserArr };
+}
+
+function damageEnemy(e, dmg, type) { e.hp -= dmg; if (type === 'ice') e.frozenUntil = Date.now() + 5000; if (e.hp <= 0) { e.alive = false; account.kills++; saveAccount(); } createExplosion(e.x+e.width/2, e.y+e.height/2); }
+function shootIce(targetX, targetY) { if (!gameStarted || isPaused || !account.iceGunOwned) return; const startX = player.x + player.width/2, startY = player.y + player.height/2; let dx = targetX - startX, dy = targetY - startY; const len = Math.hypot(dx, dy); if (len < 0.01) return; projectiles.push({ x: startX, y: startY, vx: (dx / len) * 14, vy: (dy / len) * 14, radius: 12, life: true, type: 'ice' }); createExplosion(startX-5, startY-5); }
+function shootMeat(targetX, targetY) { if (!gameStarted || isPaused || !account.weaponOwned) return; const startX = player.x + player.width/2, startY = player.y + player.height/2; let dx = targetX - startX, dy = targetY - startY; const len = Math.hypot(dx, dy); if (len < 0.01) return; projectiles.push({ x: startX, y: startY, vx: (dx / len) * 12, vy: (dy / len) * 12, radius: 12, life: true, type: 'meat', damage: 1 }); createExplosion(startX-5, startY-5); }
+function shootBomb(targetX, targetY) { if (!gameStarted || isPaused || !account.bombOwned) return; const startX = player.x + player.width/2, startY = player.y + player.height/2; let dx = targetX - startX, dy = targetY - startY; const len = Math.hypot(dx, dy); if (len < 0.01) return; projectiles.push({ x: startX, y: startY, vx: (dx / len) * 10, vy: (dy / len) * 10, radius: 16, life: true, type: 'bomb', damage: 3 }); createExplosion(startX-5, startY-5); }
+
+function updateProjectiles() {
+    for (let i=0; i<projectiles.length; i++) {
+        const p = projectiles[i]; p.x += p.vx; p.y += p.vy;
+        if (p.x < -50 || p.x > GAME_WIDTH+50 || p.y < -50 || p.y > GAME_HEIGHT+50) { projectiles.splice(i,1); i--; continue; }
+        let hit = false;
+        for (let e of enemies) { if (e.alive && p.x + p.radius > e.x && p.x - p.radius < e.x+e.width && p.y + p.radius > e.y && p.y - p.radius < e.y+e.height) { damageEnemy(e, p.type==='ice'?1:(p.damage||1), p.type); hit = true; break; } }
+        if (!hit) { for (let le of laserEnemies) { if (le.alive && p.x + p.radius > le.x && p.x - p.radius < le.x+le.width && p.y + p.radius > le.y && p.y - p.radius < le.y+le.height) { damageEnemy(le, p.type==='ice'?1:(p.damage||1), p.type); hit = true; break; } } }
+        if (hit) { 
+            if (p.type === 'bomb') {
+                for(let k=0; k<4; k++) createExplosion(p.x-20+Math.random()*40, p.y-20+Math.random()*40);
+                for (let e of enemies) { if (e.alive && Math.hypot(e.x+e.width/2 - p.x, e.y+e.height/2 - p.y) < 150) damageEnemy(e, p.damage, 'bomb'); }
+                for (let le of laserEnemies) { if (le.alive && Math.hypot(le.x+le.width/2 - p.x, le.y+le.height/2 - p.y) < 150) damageEnemy(le, p.damage, 'bomb'); }
+                if(window.playSound) window.playSound('explosion', 0);
+            }
+            projectiles.splice(i,1); i--; 
+        }
+    }
+}
+
+function drawProjectiles() { 
+    for (let p of projectiles) { 
+        ctx.save(); ctx.font = "28px 'Segoe UI Emoji'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; 
+        if (p.type === 'ice') { ctx.fillStyle = "#88ccff"; ctx.shadowBlur=10; ctx.shadowColor="#88ccff"; ctx.fillText("❄️", p.x, p.y); } 
+        else if (p.type === 'bomb') { ctx.fillStyle = "#333"; ctx.shadowBlur=15; ctx.shadowColor="#ef4444"; ctx.fillText("💣", p.x, p.y); }
+        else { ctx.fillStyle = "#ff884d"; ctx.shadowBlur=10; ctx.shadowColor="#ff884d"; ctx.fillText("🍖", p.x, p.y); } 
+        ctx.restore(); 
+    } 
+}
+
+function attackWithWeapon(aimX, aimY) {
+    if(!gameStarted||isPaused) return;
+    if(window.currentWeapon === 'ice' && account.iceGunOwned) { shootIce(aimX, aimY); return; }
+    if(window.currentWeapon === 'meat' && account.weaponOwned) { shootMeat(aimX, aimY); return; }
+    if(window.currentWeapon === 'bomb' && account.bombOwned) { shootBomb(aimX, aimY); return; }
+    attackAnimTimer = 15; attackAnimAngle = Math.atan2(aimY - (player.y+player.height/2), aimX - (player.x+player.width/2));
+    for(let e of enemies) if(e.alive){ const dx=player.x+player.width/2 - (e.x+e.width/2); const dy=player.y+player.height/2 - (e.y+e.height/2); if(Math.hypot(dx,dy)<=player.attackRange) damageEnemy(e, 1, 'melee'); }
+    for(let le of laserEnemies) if(le.alive){ const dx=player.x+player.width/2 - (le.x+le.width/2); const dy=player.y+player.height/2 - (le.y+le.height/2); if(Math.hypot(dx,dy)<=player.attackRange) damageEnemy(le, 1, 'melee'); }
+}
+function attack() { let aimX = mouseX || player.x+player.width/2+50, aimY = mouseY || player.y+player.height/2; attackWithWeapon(aimX, aimY); }
+
+function drawPlayer() {
+    let mainColor, eyeColor = "#ffffff", detailColor = "#f1c40f";
+    switch(account.currentSkin) { case 'gold': mainColor = "#f7b731"; detailColor = "#fff"; break; case 'dark': mainColor = "#1e293b"; detailColor = "#38bdf8"; break; case 'whiteHat': mainColor = "#f8fafc"; detailColor = "#94a3b8"; break; default: mainColor = "#38bdf8"; detailColor = "#0ea5e9"; }
+    ctx.fillStyle = mainColor; ctx.shadowBlur = account.currentSkin==='dark' ? 10 : 20; ctx.shadowColor = mainColor; ctx.beginPath(); ctx.ellipse(player.x+player.width/2, player.y+player.height/2, player.width/2, player.height/2, 0, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = eyeColor; ctx.beginPath(); ctx.arc(player.x+player.width/2-8, player.y+player.height/2-6, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(player.x+player.width/2+8, player.y+player.height/2-6, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = detailColor; ctx.beginPath(); ctx.moveTo(player.x+player.width/2, player.y+player.height/2+10); ctx.lineTo(player.x+player.width/2-12, player.y+player.height-5); ctx.lineTo(player.x+player.width/2+12, player.y+player.height-5); ctx.fill();
+    if(account.currentSkin === 'gold') { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(player.x+player.width/2, player.y-8); ctx.lineTo(player.x+player.width/2-8, player.y-2); ctx.lineTo(player.x+player.width/2+8, player.y-2); ctx.fill(); }
+    if(account.currentSkin === 'whiteHat') { ctx.fillStyle = '#cbd5e1'; ctx.fillRect(player.x+player.width/2-15, player.y-10, 30, 10); ctx.fillRect(player.x+player.width/2-25, player.y, 50, 5); }
+    if(account.playerName && account.playerName.trim()!==""){ ctx.font="bold 18px Inter"; ctx.fillStyle=account.nameColor; ctx.shadowBlur=8; ctx.shadowColor="rgba(0,0,0,0.8)"; ctx.textAlign="center"; ctx.fillText(account.playerName, player.x+player.width/2, player.y-22); ctx.textAlign="left"; ctx.shadowBlur=0; }
+    if (account.hasShield) { ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)'; ctx.lineWidth = 4; ctx.shadowBlur = 15; ctx.shadowColor = '#38bdf8'; ctx.setLineDash([]); ctx.beginPath(); ctx.arc(player.x+player.width/2, player.y+player.height/2, player.width/2 + 8, 0, Math.PI*2); ctx.stroke(); ctx.shadowBlur = 0; }
+    if (attackAnimTimer > 0) { ctx.save(); ctx.translate(player.x + player.width/2, player.y + player.height/2); ctx.rotate(attackAnimAngle); const extend = Math.sin((15 - attackAnimTimer) / 15 * Math.PI) * 20; ctx.fillStyle = mainColor; ctx.beginPath(); ctx.arc(player.width/2 + extend, 0, 10, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = detailColor; ctx.beginPath(); ctx.arc(player.width/2 + extend, 0, 4, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
+    
+    // Player Health Bar
+    const hpPct = Math.max(0, lives/maxLives); ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(player.x, player.y - 12, player.width, 6); ctx.fillStyle = hpPct > 0.5 ? '#10b981' : (hpPct > 0.25 ? '#f59e0b' : '#ef4444'); ctx.fillRect(player.x, player.y - 12, player.width * hpPct, 6);
+}
+
+function handleLaserHit() { if (isRespawning) return; const now = Date.now(); if (laserShieldExpiry > now) { showToast("🛡️ Очки защиты спасли от лазера!", false); createExplosion(player.x+player.width/2, player.y+player.height/2); return; } if (account.hasShield) { account.hasShield = false; saveAccount(); showToast("🛡️ Силовой щит поглотил урон!", false); isRespawning = true; setTimeout(()=> isRespawning=false, 1000); createExplosion(player.x+player.width/2, player.y+player.height/2); return; } loseLife(); createExplosion(player.x+player.width/2, player.y+player.height/2); }
+function shootLaser(le, now) { if (!le.alive) return; if (le.frozenUntil > now) return; const fromX = le.x + le.width/2, fromY = le.y + le.height/2, toX = player.x + player.width/2, toY = player.y + player.height/2; laserBeams.push({ x1: fromX, y1: fromY, x2: toX, y2: toY, life: 0.2 }); function lineIntersectsRect(x1,y1,x2,y2, rx,ry,rw,rh) { const top = ry, bottom = ry+rh, left = rx, right = rx+rw; if ((x1 < left && x2 < left) || (x1 > right && x2 > right) || (y1 < top && y2 < top) || (y1 > bottom && y2 > bottom)) return false; const m = (y2 - y1) / (x2 - x1); const b = y1 - m * x1; if ((m * left + b >= top && m * left + b <= bottom) || (m * right + b >= top && m * right + b <= bottom)) return true; if (( (top - b)/m >= left && (top - b)/m <= right ) || ( (bottom - b)/m >= left && (bottom - b)/m <= right )) return true; return false; } if (lineIntersectsRect(fromX, fromY, toX, toY, player.x, player.y, player.width, player.height)) handleLaserHit(); }
+
+function update() {
+    if (!gameStarted || isPaused) return; if (attackAnimTimer > 0) attackAnimTimer--;
+    let move = 0; if (keys['ArrowRight']||keys['KeyD']) move+=1; if (keys['ArrowLeft']||keys['KeyA']) move-=1; if (settings.controlMode==='mobile') { if(vLeft) move-=1; if(vRight) move+=1; }
+    if(move!==0) player.x += move * player.speed; if((keys['Space']||keys['KeyW']||keys['ArrowUp']) && player.isGrounded) player.vy = player.jumpPower;
+    const groundY = GAME_HEIGHT-80; player.vy+=player.gravity; player.y+=player.vy;
+    if(player.y+player.height>groundY){ player.y=groundY-player.height; player.vy=0; player.isGrounded=true; } else player.isGrounded=false;
+    if(player.y<0){ player.y=0; player.vy=0; } player.x=Math.max(0,Math.min(player.x,GAME_WIDTH-player.width));
+    const nowTime = Date.now(); enemies.forEach(e=>{ if(e.alive && e.frozenUntil <= nowTime) e.x+=e.vx; }); laserEnemies.forEach(le=>{ if(le.alive && le.frozenUntil <= nowTime) le.x+=le.vx; });
+    for(let e of enemies) if(e.alive && e.frozenUntil <= nowTime && player.x<e.x+e.width && player.x+player.width>e.x && player.y<e.y+e.height && player.y+player.height>e.y) { if(account.hasShield) { account.hasShield=false; saveAccount(); showToast("🛡️ Щит спас вас!"); isRespawning=true; setTimeout(()=>isRespawning=false,1000); createExplosion(player.x+player.width/2,player.y+player.height/2); break; } loseLife(); createExplosion(player.x+player.width/2,player.y+player.height/2); break; }
+    for(let le of laserEnemies) if(le.alive && le.frozenUntil <= nowTime && player.x<le.x+le.width && player.x+player.width>le.x && player.y<le.y+le.height && player.y+player.height>le.y) { if(account.hasShield) { account.hasShield=false; saveAccount(); showToast("🛡️ Щит спас вас!"); isRespawning=true; setTimeout(()=>isRespawning=false,1000); createExplosion(player.x+player.width/2,player.y+player.height/2); break; } loseLife(); createExplosion(player.x+player.width/2,player.y+player.height/2); break; }
+    for(let e of enemies) if(e.alive && (e.x+e.width<-100||e.x>GAME_WIDTH+100)) { loseLife(); createExplosion(e.x+e.width/2,e.y+e.height/2); break; }
+    for(let le of laserEnemies) if(le.alive && (le.x+le.width<-100||le.x>GAME_WIDTH+100)) { loseLife(); createExplosion(le.x+le.width/2,le.y+le.height/2); break; }
+    for(let i=0;i<coins.length;i++) { let c=coins[i]; if(!c.active) continue; if(player.x<c.x+c.width && player.x+player.width>c.x && player.y<c.y+c.height && player.y+player.height>c.y) { c.active=false; coins.splice(i,1); totalCoins++; account.totalCoins++; saveAccount(); updateAccountStatsUI(); createExplosion(c.x+c.width/2,c.y+c.height/2); if(window.playSound) window.playSound('coin'); i--; } }
+    for(let i=0;i<meat.length;i++) { let m=meat[i]; if(!m.active) continue; if(player.x<m.x+m.width && player.x+player.width>m.x && player.y<m.y+m.height && player.y+player.height>m.y) { m.active=false; meat.splice(i,1); totalCoins++; account.totalCoins++; saveAccount(); updateAccountStatsUI(); if(lives<maxLives) lives++; createExplosion(m.x+m.width/2,m.y+m.height/2); if(window.playSound) window.playSound('meat'); i--; } }
+    updateProjectiles();
+    const now = performance.now(); for (let le of laserEnemies) { if (le.alive && le.frozenUntil <= now && now - le.lastShot > le.shootCooldown) { le.lastShot = now; shootLaser(le, now); } }
+    for (let i=0;i<laserBeams.length;i++) { laserBeams[i].life -= 0.016; if (laserBeams[i].life <= 0) laserBeams.splice(i,1), i--; }
+    if(!enemies.some(e=>e.alive) && !laserEnemies.some(le=>le.alive) && coins.length===0) { if(currentLevel<maxLevels){ completeLevel(); currentLevel++; saveProgressToLocal(); const data=generateLevel(currentLevel,GAME_WIDTH,GAME_HEIGHT); finishX=data.finishX; enemies=data.enemies; coins=data.coins; meat=data.meat; laserEnemies=data.laserEnemies; resetPlayer(); announceLevel(currentLevel % 5 === 0 ? "БОНУС УРОВЕНЬ!" : currentLevel); if(window.playSound) window.playSound('levelUp'); } else { winOverlay.style.display='flex'; gameStarted = false; } }
+    updateParticles(); if(loseFlashAlpha>0) loseFlashAlpha-=0.015; if(levelAnnounce.alpha>0) levelAnnounce.alpha-=0.005;
+}
+function loseLife() { if(isRespawning) return; isRespawning=true; lives--; if(lives<=0){ lives=maxLives; const data=generateLevel(currentLevel,GAME_WIDTH,GAME_HEIGHT); finishX=data.finishX; enemies=data.enemies; coins=data.coins; meat=data.meat; laserEnemies=data.laserEnemies; resetPlayer(); triggerLoseFlash(); } setTimeout(()=>{ isRespawning=false; },200); }
+
+function draw() { 
+    ctx.save(); ctx.scale(scaleFactor, scaleFactor); ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
+    const grad=ctx.createLinearGradient(0,0,0,GAME_HEIGHT); grad.addColorStop(0,'#020617'); grad.addColorStop(0.5,'#0f172a'); grad.addColorStop(1,'#1e293b'); ctx.fillStyle=grad; ctx.fillRect(0,0,GAME_WIDTH,GAME_HEIGHT);
+    const groundY=GAME_HEIGHT-80; ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)'; ctx.lineWidth = 1;
+    for(let i=0; i<GAME_WIDTH; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,groundY); ctx.stroke(); } for(let i=0; i<groundY; i+=100) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(GAME_WIDTH,i); ctx.stroke(); }
+    ctx.fillStyle='rgba(15, 23, 42, 0.9)'; ctx.fillRect(0,groundY,GAME_WIDTH,80); ctx.fillStyle='#38bdf8'; ctx.shadowBlur=15; ctx.shadowColor='#38bdf8'; ctx.fillRect(0,groundY,GAME_WIDTH,4); ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(56,189,248,0.2)'; for(let i=0;i<GAME_WIDTH;i+=80) ctx.fillRect(i+20,groundY+20,40,8);
+    coins.forEach(c=>{ if(!c.active) return; ctx.font="24px 'Segoe UI Emoji'"; ctx.textAlign="center"; ctx.shadowBlur=15; ctx.shadowColor="#fcd34d"; ctx.fillStyle="#ffd966"; ctx.fillText("⭐",c.x+c.width/2,c.y+c.height/2); ctx.shadowBlur=0; });
+    meat.forEach(m=>{ if(!m.active) return; ctx.font="24px 'Segoe UI Emoji'"; ctx.shadowBlur=15; ctx.shadowColor="#f87171"; ctx.fillStyle="#ffaa66"; ctx.fillText("🥩",m.x+m.width/2,m.y+m.height/2); ctx.shadowBlur=0; });
+    ctx.save(); ctx.strokeStyle='#10b981'; ctx.shadowBlur=20; ctx.shadowColor='#10b981'; ctx.lineWidth=4; ctx.setLineDash([15,15]); ctx.beginPath(); ctx.moveTo(finishX,groundY-20); ctx.lineTo(finishX,groundY+70); ctx.stroke(); ctx.restore();
+    
+    enemies.forEach(e=>{ if(!e.alive) return; ctx.fillStyle='#ef4444'; ctx.shadowBlur=15; ctx.shadowColor='#ef4444'; ctx.beginPath(); ctx.ellipse(e.x+e.width/2,e.y+e.height/2,e.width/2,e.height/2,0,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(e.x+e.width/2-6,e.y+e.height/2-6,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(e.x+e.width/2+4,e.y+e.height/2-6,3,0,Math.PI*2); ctx.fill(); if(e.frozenUntil > Date.now()) { ctx.fillStyle='rgba(100,200,255,0.6)'; ctx.beginPath(); ctx.ellipse(e.x+e.width/2,e.y+e.height/2,e.width/2+4,e.height/2+4,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#aaffff'; ctx.font='20px monospace'; ctx.fillText("❄️", e.x+e.width/2-8, e.y+e.height/2-8); } 
+        const ehp = Math.max(0, e.hp/e.maxHp); ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(e.x, e.y-12, e.width, 5); ctx.fillStyle='#ef4444'; ctx.fillRect(e.x, e.y-12, e.width*ehp, 5);
+    });
+    laserEnemies.forEach(le=>{ if(!le.alive) return; ctx.fillStyle='#0f172a'; ctx.shadowBlur=10; ctx.shadowColor='#8b5cf6'; ctx.beginPath(); ctx.ellipse(le.x+le.width/2, le.y+le.height/2, le.width/2, le.height/2, 0, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.fillStyle='#a855f7'; ctx.beginPath(); ctx.arc(le.x+le.width/2-6, le.y+le.height/2-6, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(le.x+le.width/2+4, le.y+le.height/2-6, 3, 0, Math.PI*2); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(le.x+le.width/2-6, le.y+le.height/2-6, 1.5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(le.x+le.width/2+4, le.y+le.height/2-6, 1.5, 0, Math.PI*2); ctx.fill(); if(le.frozenUntil > Date.now()) { ctx.fillStyle='rgba(100,200,255,0.6)'; ctx.beginPath(); ctx.ellipse(le.x+le.width/2,le.y+le.height/2,le.width/2+4,le.height/2+4,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#aaffff'; ctx.font='20px monospace'; ctx.fillText("❄️", le.x+le.width/2-8, le.y+le.height/2-8); } 
+        const lhp = Math.max(0, le.hp/le.maxHp); ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(le.x, le.y-12, le.width, 5); ctx.fillStyle='#ef4444'; ctx.fillRect(le.x, le.y-12, le.width*lhp, 5);
+    });
+    
+    drawPlayer(); drawProjectiles();
+    for(let beam of laserBeams) { ctx.beginPath(); ctx.moveTo(beam.x1, beam.y1); ctx.lineTo(beam.x2, beam.y2); ctx.strokeStyle = `rgba(168, 85, 247, ${beam.life*0.9})`; ctx.lineWidth = 6; ctx.shadowBlur=20; ctx.shadowColor='#a855f7'; ctx.stroke(); ctx.lineWidth = 2; ctx.strokeStyle = `rgba(255, 255, 255, ${beam.life})`; ctx.stroke(); ctx.shadowBlur=0; }
+    drawParticles(); if(loseFlashAlpha>0){ ctx.fillStyle=`rgba(239, 68, 68,${loseFlashAlpha*0.3})`; ctx.fillRect(0,0,GAME_WIDTH,GAME_HEIGHT); }
+    if(levelAnnounce.alpha>0){ ctx.font='800 64px Inter'; ctx.fillStyle=`rgba(56, 189, 248,${levelAnnounce.alpha})`; ctx.shadowBlur=30; ctx.shadowColor='rgba(56, 189, 248, 0.8)'; ctx.textAlign='center'; ctx.fillText(levelAnnounce.text,GAME_WIDTH/2,GAME_HEIGHT/2-40); ctx.shadowBlur=0; }
+    ctx.font='bold 26px Inter'; ctx.fillStyle='#f8fafc'; ctx.shadowBlur=5; ctx.shadowColor='#000'; ctx.fillText(currentLevel % 5 === 0 ? "БОНУС УРОВЕНЬ" : `Уровень ${currentLevel} из ${maxLevels}`, 30, 60);
+    const collected = (window.initialCoinsCount||0) - coins.length; ctx.fillStyle='#fcd34d'; ctx.fillText(`⭐ Монеты: ${collected}/${window.initialCoinsCount || 0}`, 30, 100);
+    if(laserShieldExpiry > Date.now()) { ctx.font='bold 18px Inter'; ctx.fillStyle='#6ee7b7'; ctx.fillText(`🛡️ Защита ${Math.ceil((laserShieldExpiry-Date.now())/1000)}с`, GAME_WIDTH-180, 50); }
+    if(account.hasShield) { ctx.font='bold 18px Inter'; ctx.fillStyle='#38bdf8'; ctx.fillText(`🛡️ Силовой Щит`, GAME_WIDTH-200, 80); }
+    ctx.restore();
+}
+
+function renderStore() {
+    const container = document.getElementById('storeItemsList'); if(!container) return;
+    const coinsDisplay = document.getElementById('storeCoinsDisplay'); if(coinsDisplay) coinsDisplay.textContent = `⭐ ${account.totalCoins}`;
+    const items = [ { id:'speed', name:'Скорость +20%', price:100, current:account.upgrades.speed, max:3, desc:'Увеличивает скорость бега' }, { id:'jump', name:'Прыжок +20%', price:100, current:account.upgrades.jump, max:3, desc:'Выше прыжок' }, { id:'attackRange', name:'Радиус атаки +20%', price:150, current:account.upgrades.attackRange, max:3, desc:'Дальше бьёте' }, { id:'extraLife', name:'Доп. жизнь', price:200, current:account.upgrades.extraLife, max:2, desc:'+1 максимальная жизнь' } ];
+    container.innerHTML = ''; items.forEach(item => { const div = document.createElement('div'); div.className = 'store-item'; div.innerHTML = `<div class="store-item-info"><strong>${item.name}</strong><br><small>${item.desc} (${item.current}/${item.max})</small></div><div class="store-item-price">${item.price} ⭐</div><button class="store-buy-btn" data-id="${item.id}" ${item.current >= item.max ? 'disabled' : ''}>${item.current >= item.max ? 'MAX' : 'Купить'}</button>`; container.appendChild(div); });
+    document.querySelectorAll('#storeItemsList .store-buy-btn').forEach(btn => { btn.addEventListener('click', () => { const id = btn.dataset.id; let price = 100; if(id==='attackRange') price=150; if(id==='extraLife') price=200; if(account.upgrades[id] < (id==='extraLife'?2:3) && account.totalCoins >= price) { account.totalCoins -= price; account.upgrades[id]++; saveAccount(); renderStore(); showToast(`Улучшено: ${id}`); if(window.playSound) window.playSound('buy'); } else showToast(`Не хватает монет!`, true); }); });
+    const skinsContainer = document.getElementById('skinsList'); const skins = [ { id: 'classic', name: 'Неоновый синий', price: 0, color: '#38bdf8' }, { id: 'gold', name: 'Золотой воин', price: 500, color: '#fcd34d' }, { id: 'dark', name: 'Тёмный рыцарь', price: 300, color: '#1e293b' } ]; if(account.ownedSkins.includes('whiteHat')) skins.push({ id: 'whiteHat', name: 'Белая шляпа (Промо)', price: 0, color: '#f8fafc' });
+    skinsContainer.innerHTML = ''; skins.forEach(skin => { const owned = account.ownedSkins.includes(skin.id); const isCurrent = account.currentSkin === skin.id; const div = document.createElement('div'); div.className = 'store-item'; let sellBtnHtml = ''; if (owned && skin.id !== 'classic' && skin.id !== 'whiteHat') sellBtnHtml = `<button class="store-buy-btn skin-sell-action" data-skin="${skin.id}" style="background:rgba(239,68,68,0.2); border-color:#ef4444; margin-left:5px;">Продать (${skin.price / 2} ⭐)</button>`; div.innerHTML = `<div style="display:flex; align-items:center;"><span class="skin-preview" style="background:${skin.color}; border:2px solid rgba(255,255,255,0.2);"></span><div class="store-item-info"><strong>${skin.name}</strong><br><small>${owned ? (isCurrent ? '✅ Надет' : 'Куплен') : 'Не куплен'}</small></div></div><div class="store-item-price">${skin.price} ⭐</div><div style="display:flex;"><button class="store-buy-btn skin-action" data-skin="${skin.id}" ${owned ? (isCurrent ? 'disabled' : '') : ''} style="${owned && !isCurrent ? 'background:rgba(56,189,248,0.2); border-color:#38bdf8;' : ''}">${owned ? (isCurrent ? 'НАДЕТ' : 'Надеть') : 'Купить'}</button>${sellBtnHtml}</div>`; skinsContainer.appendChild(div); });
+    document.querySelectorAll('.skin-action').forEach(btn => { btn.addEventListener('click', () => { const skinId = btn.dataset.skin; const skin = skins.find(s=>s.id===skinId); if(account.ownedSkins.includes(skinId)) { if(account.currentSkin !== skinId) { account.currentSkin = skinId; saveAccount(); renderStore(); showToast(`Скин надет!`); if(window.playSound) window.playSound('buy'); } } else { if(account.totalCoins >= skin.price) { account.totalCoins -= skin.price; account.ownedSkins.push(skinId); account.currentSkin = skinId; saveAccount(); renderStore(); showToast(`Скин куплен!`); if(window.playSound) window.playSound('buy'); } else showToast(`Не хватает монет!`, true); } }); });
+    document.querySelectorAll('.skin-sell-action').forEach(btn => { btn.addEventListener('click', () => { const skinId = btn.dataset.skin; const skin = skins.find(s=>s.id===skinId); account.totalCoins += Math.floor(skin.price / 2); account.ownedSkins = account.ownedSkins.filter(s => s !== skinId); if (account.currentSkin === skinId) account.currentSkin = 'classic'; saveAccount(); renderStore(); showToast(`Скин продан!`); }); });
+    
+    const weaponDiv = document.getElementById('weaponSection'); weaponDiv.innerHTML = '';
+    const meatItem = document.createElement('div'); meatItem.className = 'store-item'; if(account.weaponOwned) meatItem.innerHTML = `<div><strong>🔫 МЯСО-БАЗУКА</strong><br><small>Дальнобойное оружие.</small></div><div style="color:#10b981; font-weight:bold;">КУПЛЕНО</div><div style="display:flex;"><button class="store-buy-btn" id="sellWeaponBtn" style="background:rgba(239,68,68,0.2); border-color:#ef4444; margin-left:5px;">Продать (400 ⭐)</button></div>`; else meatItem.innerHTML = `<div><strong>🔫 МЯСО-БАЗУКА</strong><br><small>Стреляет 🍖</small></div><div class="store-item-price">800 ⭐</div><button class="store-buy-btn" id="buyWeaponBtn">Купить</button>`; weaponDiv.appendChild(meatItem);
+    const iceItem = document.createElement('div'); iceItem.className = 'store-item'; if(account.iceGunOwned) iceItem.innerHTML = `<div><strong>❄️ ЛЕДЯНОЙ БЛАСТЕР</strong><br><small>Заморозка на 5 сек!</small></div><div style="color:#10b981; font-weight:bold;">КУПЛЕНО</div><div style="display:flex;"><button class="store-buy-btn" id="sellIceGunBtn" style="background:rgba(239,68,68,0.2); border-color:#ef4444; margin-left:5px;">Продать (500 ⭐)</button></div>`; else iceItem.innerHTML = `<div><strong>❄️ ЛЕДЯНОЙ БЛАСТЕР</strong><br><small>Заморозка врагов</small></div><div class="store-item-price">1000 ⭐</div><button class="store-buy-btn" id="buyIceGunBtn">Купить</button>`; weaponDiv.appendChild(iceItem);
+    const bombItem = document.createElement('div'); bombItem.className = 'store-item'; if(account.bombOwned) bombItem.innerHTML = `<div><strong>💣 БОМБОМЕТ</strong><br><small>Урон по площади!</small></div><div style="color:#10b981; font-weight:bold;">КУПЛЕНО</div><div style="display:flex;"><button class="store-buy-btn" id="sellBombBtn" style="background:rgba(239,68,68,0.2); border-color:#ef4444; margin-left:5px;">Продать (600 ⭐)</button></div>`; else bombItem.innerHTML = `<div><strong>💣 БОМБОМЕТ</strong><br><small>Взрывает всех вокруг</small></div><div class="store-item-price">1200 ⭐</div><button class="store-buy-btn" id="buyBombBtn">Купить</button>`; weaponDiv.appendChild(bombItem);
+    
+    const buyWeapon = document.getElementById('buyWeaponBtn'); if(buyWeapon) buyWeapon.onclick = () => { if(!account.weaponOwned && account.totalCoins >= 800) { account.totalCoins -= 800; account.weaponOwned = true; saveAccount(); renderStore(); updateWeaponUI(); showToast("🎉 Куплена МЯСО-БАЗУКА!"); if(window.playSound) window.playSound('buy'); } else if(account.weaponOwned) showToast("Уже куплено!"); else showToast("Недостаточно монет!", true); };
+    const sellWeapon = document.getElementById('sellWeaponBtn'); if(sellWeapon) sellWeapon.onclick = () => { account.totalCoins += 400; account.weaponOwned = false; window.currentWeapon='melee'; saveAccount(); renderStore(); updateWeaponUI(); showToast("Оружие продано!"); };
+    const buyIce = document.getElementById('buyIceGunBtn'); if(buyIce) buyIce.onclick = () => { if(!account.iceGunOwned && account.totalCoins >= 1000) { account.totalCoins -= 1000; account.iceGunOwned = true; saveAccount(); renderStore(); updateWeaponUI(); showToast("❄️ Куплен ЛЕДЯНОЙ БЛАСТЕР!"); if(window.playSound) window.playSound('buy'); } else if(account.iceGunOwned) showToast("Уже куплено!"); else showToast("Недостаточно монет!", true); };
+    const sellIceGun = document.getElementById('sellIceGunBtn'); if(sellIceGun) sellIceGun.onclick = () => { account.totalCoins += 500; account.iceGunOwned = false; window.currentWeapon='melee'; saveAccount(); renderStore(); updateWeaponUI(); showToast("Оружие продано!"); };
+    const buyBomb = document.getElementById('buyBombBtn'); if(buyBomb) buyBomb.onclick = () => { if(!account.bombOwned && account.totalCoins >= 1200) { account.totalCoins -= 1200; account.bombOwned = true; saveAccount(); renderStore(); updateWeaponUI(); showToast("💣 Куплен БОМБОМЕТ!"); if(window.playSound) window.playSound('buy'); } else if(account.bombOwned) showToast("Уже куплено!"); else showToast("Недостаточно монет!", true); };
+    const sellBomb = document.getElementById('sellBombBtn'); if(sellBomb) sellBomb.onclick = () => { account.totalCoins += 600; account.bombOwned = false; window.currentWeapon='melee'; saveAccount(); renderStore(); updateWeaponUI(); showToast("Оружие продано!"); };
+
+    const shieldSection = document.createElement('div'); shieldSection.innerHTML = `<hr style="margin: 20px 0;"><h3 style="color:#38bdf8; margin-bottom:15px;">🛡️ Защита</h3><div class="store-item"><div><strong>Антилазер</strong><br><small>Иммунитет 10 сек</small></div><div class="store-item-price">300 ⭐</div><button class="store-buy-btn" id="buyShieldBtn">Купить</button></div>`; const permShield = document.createElement('div'); permShield.className = 'store-item'; permShield.innerHTML = `<div><strong>Силовой Щит</strong><br><small>Блокирует 1 удар</small></div><div class="store-item-price">150 ⭐</div><button class="store-buy-btn" id="buyPermShieldBtn" ${account.hasShield ? 'disabled' : ''}>${account.hasShield ? 'Активен' : 'Купить'}</button>`; shieldSection.appendChild(permShield); weaponDiv.appendChild(shieldSection);
+    const shieldBuy = document.getElementById('buyShieldBtn'); if(shieldBuy) shieldBuy.onclick = () => { if (account.totalCoins >= 300) { account.totalCoins -= 300; saveAccount(); laserShieldExpiry = Date.now() + 10000; renderStore(); showToast("🛡️ Защита активирована!"); if(window.playSound) window.playSound('buy'); } else showToast("Не хватает монет!", true); };
+    const permShieldBuy = document.getElementById('buyPermShieldBtn'); if(permShieldBuy) permShieldBuy.onclick = () => { if (account.totalCoins >= 150) { account.totalCoins -= 150; account.hasShield = true; saveAccount(); renderStore(); showToast("🛡️ Щит куплен!"); if(window.playSound) window.playSound('buy'); } else showToast("Не хватает монет!", true); };
+    const stardropDiv = document.createElement('div'); stardropDiv.innerHTML = `<hr style="margin: 20px 0;"><h3 style="color:#38bdf8; margin-bottom:15px;">⭐ Стардропы</h3><div class="store-item"><div><strong>Открыть Стардроп</strong><br><small>Случайная награда</small></div><div class="store-item-price">100 ⭐</div><button class="store-buy-btn" style="background:rgba(245,158,11,0.2); border-color:#f59e0b;" id="buyStardropBtn">Открыть</button></div>`; weaponDiv.appendChild(stardropDiv);
+    document.getElementById('buyStardropBtn').onclick = () => { if(account.totalCoins >= 100) { account.totalCoins -= 100; saveAccount(); renderStore(); document.getElementById('stardropOverlay').style.display = 'flex'; const rarityEl = document.getElementById('stardropRarity'); const rewardEl = document.getElementById('stardropReward'); rarityEl.textContent = 'Открываем...'; rarityEl.style.color = '#fff'; rewardEl.textContent = '📦'; rewardEl.classList.add('stardrop-anim'); document.getElementById('closeStardropBtn').style.display = 'none'; setTimeout(() => { rewardEl.classList.remove('stardrop-anim'); const r = Math.random(); let rarityText = '', rewardObj = '', color = ''; if(r < 0.5) { rarityText = 'РЕАЛЬНЫЙ'; color='#10b981'; account.totalCoins += 50; rewardObj = '50 ⭐'; } else if(r < 0.8) { rarityText = 'СВЕРХРЕДКИЙ'; color='#38bdf8'; account.totalCoins += 150; rewardObj = '150 ⭐'; } else if(r < 0.95) { rarityText = 'ЭПИЧЕСКИЙ'; color='#a855f7'; account.totalCoins += 300; rewardObj = '300 ⭐'; } else if(r < 0.99) { rarityText = 'МИФИЧЕСКИЙ'; color='#ef4444'; account.hasShield = true; rewardObj = '🛡️ Одноразовый Щит'; } else { rarityText = 'ЛЕГЕНДАРНЫЙ!'; color='#fcd34d'; account.totalCoins += 1000; rewardObj = '1000 ⭐ джекпот!'; } rarityEl.textContent = rarityText; rarityEl.style.color = color; rewardEl.textContent = rewardObj; saveAccount(); renderStore(); document.getElementById('closeStardropBtn').style.display = 'block'; if(window.playSound) window.playSound('levelUp'); }, 1500); } else { showToast("Не хватает монет!", true); } };
+    const promoDiv = document.createElement('div'); promoDiv.innerHTML = `<hr style="margin: 20px 0;"><h3 style="color:#38bdf8; margin-bottom:15px;">🎁 Промокоды</h3><div style="display:flex;gap:10px;margin-bottom:10px;"><input type="text" id="promoInput" placeholder="Введите код..." style="flex:1;border-radius:12px;border:1px solid rgba(255,255,255,0.1);padding:10px 15px;background:rgba(0,0,0,0.3);color:#fff;outline:none;"><button class="store-buy-btn" id="applyPromoBtn" style="padding:10px 20px;">ОК</button></div>`; weaponDiv.appendChild(promoDiv);
+    document.getElementById('applyPromoBtn').onclick = () => { const val = document.getElementById('promoInput').value.trim().toUpperCase(); if(val === 'MAY2026') { if(!account.ownedSkins.includes('whiteHat')) { account.ownedSkins.push('whiteHat'); account.currentSkin = 'whiteHat'; saveAccount(); showToast('🎉 Промокод сработал!'); renderStore(); if(window.playSound) window.playSound('levelUp'); } else showToast('Этот код уже активирован!'); } else showToast('Неверный код!', true); };
+}
+
+function saveProgressToLocal() { if(!gameStarted) return; const data={ level:currentLevel, coins:totalCoins, kills:account.kills, totalCoins:account.totalCoins, lives:lives }; localStorage.setItem(SAVE_KEY,JSON.stringify(data)); saveProgress(); }
+function loadProgressFromLocal() { const raw=localStorage.getItem(SAVE_KEY); if(!raw) return null; try{ return JSON.parse(raw); } catch(e){ return null; } }
+function applySavedGame() { const saved=loadProgressFromLocal(); if(!saved){ showToast('Нет сохранения', true); return false; } currentLevel=saved.level; if(currentLevel>maxUnlockedLevel) maxUnlockedLevel=currentLevel; totalCoins=saved.coins; account.kills=saved.kills||0; account.totalCoins=saved.totalCoins||saved.coins; lives=(saved.lives!==undefined)?saved.lives:maxLives; saveAccount(); updateAccountStatsUI(); const data=generateLevel(currentLevel,GAME_WIDTH,GAME_HEIGHT); finishX=data.finishX; enemies=data.enemies; coins=data.coins; meat=data.meat; laserEnemies=data.laserEnemies; resetPlayer(); announceLevel(currentLevel % 5 === 0 ? "БОНУС УРОВЕНЬ!" : currentLevel); gameStarted=true; isPaused=false; document.getElementById('menuOverlay').style.display='none'; updateCornerButtonsVisibility(); updateMobilePauseButtonVisibility(); updateWeaponUI(); showToast('Сохранение загружено'); return true; }
+function showInstructionBeforeNewGame() { document.getElementById('menuOverlay').style.display = 'none'; document.getElementById('instructionOverlay').style.display = 'flex'; }
+function resetAndNewGame() { localStorage.removeItem(SAVE_KEY); totalCoins=0; lives=maxLives; currentLevel=1; maxUnlockedLevel=1; saveProgress(); const data=generateLevel(1,GAME_WIDTH,GAME_HEIGHT); finishX=data.finishX; enemies=data.enemies; coins=data.coins; meat=data.meat; laserEnemies=data.laserEnemies; resetPlayer(); announceLevel(1); gameStarted=true; isPaused=false; document.getElementById('menuOverlay').style.display='none'; updateCornerButtonsVisibility(); updateMobilePauseButtonVisibility(); updateWeaponUI(); }
+
+function loadAccount() { const saved=localStorage.getItem(ACCOUNT_KEY); if(saved){ try{ const p=JSON.parse(saved); if(p.playerName) account.playerName=p.playerName.slice(0,20); if(p.nameColor) account.nameColor=p.nameColor; if(p.kills) account.kills=p.kills; if(p.totalCoins) account.totalCoins=p.totalCoins; if(p.upgrades) account.upgrades=p.upgrades; else account.upgrades={ speed:0, jump:0, attackRange:0, extraLife:0 }; if(p.currentSkin) account.currentSkin=p.currentSkin; if(p.ownedSkins) account.ownedSkins=p.ownedSkins; else account.ownedSkins=['classic']; if(p.weaponOwned !== undefined) account.weaponOwned=p.weaponOwned; else account.weaponOwned=false; if(p.iceGunOwned !== undefined) account.iceGunOwned=p.iceGunOwned; else account.iceGunOwned=false; if(p.bombOwned !== undefined) account.bombOwned=p.bombOwned; else account.bombOwned=false; if(p.hasShield !== undefined) account.hasShield=p.hasShield; }catch(e){} } if(!account.ownedSkins.includes('classic')) account.ownedSkins.push('classic'); document.getElementById('playerNameInput').value=account.playerName; updateAvatarAndDisplay(); applyUpgrades(); updateWeaponUI(); }
+function saveAccount() { localStorage.setItem(ACCOUNT_KEY,JSON.stringify(account)); updateAccountStatsUI(); applyUpgrades(); }
+function updateAccountStatsUI() { document.getElementById('statTotalCoins').textContent=account.totalCoins; document.getElementById('statKills').textContent=account.kills; }
+function applyAccountChanges() { const newName=document.getElementById('playerNameInput').value.trim(); if(newName) account.playerName=newName; else account.playerName="Bly"; saveAccount(); updateAvatarAndDisplay(); }
+
+let avatarEmoji = localStorage.getItem('avatarEmoji') || '⚔️', avatarBgColor = localStorage.getItem('avatarBgColor') || '#1e293b';
+function updateAvatarUI() { const avatarDiv=document.getElementById('profileAvatar'); const emojiSpan=document.getElementById('avatarEmoji'); if(avatarDiv) avatarDiv.style.background=`linear-gradient(145deg, ${avatarBgColor}, #0f172a)`; if(emojiSpan) emojiSpan.textContent=avatarEmoji; }
+function updateAvatarAndDisplay() { document.getElementById('profileDisplayName').textContent=account.playerName.trim()||"Bly"; document.getElementById('profileDisplayName').style.color=account.nameColor; updateAvatarUI(); }
+function buildEmojiGrid() { const grid=document.getElementById('emojiGrid'); if(!grid) return; grid.innerHTML=''; const emojis=['⚔️','🛡️','🏹','🚀','⚡','🔥','💎','👑']; emojis.forEach(emo=>{ const div=document.createElement('div'); div.className='emoji-option'; div.textContent=emo; div.onclick=()=>{ avatarEmoji=emo; localStorage.setItem('avatarEmoji',avatarEmoji); updateAvatarUI(); document.getElementById('avatarPickerOverlay').style.display='none'; }; grid.appendChild(div); }); }
+
+const musicTracks=['https://ukit.com/uploads/s/d/1/y/d1ydek22fpt3/file/KhluC4G6.mp3?preview=1','https://ukit.com/uploads/s/d/1/y/d1ydek22fpt3/file/8g6B8otg.mp3','https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3','https://gzk2ags80.ukit.me/uploads/s/d/1/y/d1ydek22fpt3/file/FUCoLe9v.mp3?preview=1','https://gzk2ags80.ukit.me/uploads/s/d/1/y/d1ydek22fpt3/file/SsM43lOb.mp3?preview=1'];
+let bgAudio=null;
+function initMusic(){ if(!bgAudio){ bgAudio=new Audio(); bgAudio.loop=false; bgAudio.volume=settings.musicVolume; bgAudio.addEventListener('ended',()=>playRandomTrack()); } playRandomTrack(); }
+function playRandomTrack(){ if(!bgAudio) return; const newIndex=Math.floor(Math.random()*musicTracks.length); bgAudio.src=musicTracks[newIndex]; bgAudio.load(); }
+function shouldMusicPlay(){ return gameStarted && !isPaused && document.getElementById('menuOverlay').style.display!=='flex' && pauseOverlay.style.display!=='flex' && winOverlay.style.display!=='flex' && instructionOverlay.style.display!=='flex' && accountOverlay.style.display!=='flex' && storeOverlay.style.display!=='flex' && noInternetOverlay.style.display!=='flex' && levelSelectOverlay.style.display!=='flex' && document.getElementById('moreOverlay').style.display!=='flex'; }
+function checkMusic(){ if(!bgAudio){ initMusic(); return; } if(shouldMusicPlay()){ if(bgAudio.paused) bgAudio.play().catch(e=>console.log); } else { if(!bgAudio.paused) bgAudio.pause(); } } setInterval(checkMusic,300);
+
+function updateCornerButtonsVisibility(){ const show=!gameStarted && document.getElementById('menuOverlay').style.display==='flex'; document.getElementById('accountCornerBtn').classList.toggle('hide',!show); document.getElementById('inviteCornerBtn').classList.toggle('hide',!show); updateWeaponUI(); }
+function updateMobilePauseButtonVisibility(){ const pauseBtn=document.getElementById('mobilePauseBtn'); const shouldShow=(settings.controlMode==='mobile') && gameStarted && document.getElementById('menuOverlay').style.display!=='flex' && winOverlay.style.display!=='flex'; pauseBtn.style.display=shouldShow?'flex':'none'; }
+function togglePauseFromMobile(){ if(!gameStarted) return; if(pauseOverlay.style.display==='flex'){ pauseOverlay.style.display='none'; isPaused=false; }else{ pauseOverlay.style.display='flex'; isPaused=true; } updateMobilePauseButtonVisibility(); }
+function loadSettings(){ const saved=localStorage.getItem(SETTINGS_KEY); if(saved){ try{ const p=JSON.parse(saved); if(typeof p.musicVolume==='number') settings.musicVolume=p.musicVolume; if(p.controlMode==='pc'||p.controlMode==='mobile') settings.controlMode=p.controlMode; }catch(e){} } if(bgAudio) bgAudio.volume=settings.musicVolume; document.getElementById('musicVolume').value=settings.musicVolume*100; updateModeButtonsUI(); applyVirtualController(); updateMobilePauseButtonVisibility(); }
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY,JSON.stringify({musicVolume:settings.musicVolume,controlMode:settings.controlMode})); }
+function updateModeButtonsUI(){ document.querySelectorAll('.mode-btn').forEach(btn=>{ if(btn.dataset.mode===settings.controlMode) btn.classList.add('active'); else btn.classList.remove('active'); }); }
+function applyVirtualController(){ document.getElementById('virtualController').style.display=(settings.controlMode==='mobile')?'flex':'none'; }
+
+let gamepadIndex = null, lastJump = false, lastAttack = false, lastPause = false;
+function handleGamepad() { if (gamepadIndex===null) { const pads=navigator.getGamepads(); for(let i=0;i<pads.length;i++) if(pads[i]){ gamepadIndex=i; break; } } if (gamepadIndex===null) return; const gp = navigator.getGamepads()[gamepadIndex]; if (!gp) return; const axis = gp.axes[0]; if (Math.abs(axis)>0.2) { if (axis<0) player.x -= player.speed; else player.x += player.speed; } if (gp.buttons[14]?.pressed) player.x -= player.speed; if (gp.buttons[15]?.pressed) player.x += player.speed; const jump = gp.buttons[0]?.pressed; if (jump && !lastJump && player.isGrounded) player.vy = player.jumpPower; lastJump = jump; const attackBtn = gp.buttons[3]?.pressed; if (attackBtn && !lastAttack) attack(); lastAttack = attackBtn; const pauseBtn = gp.buttons[9]?.pressed; if (pauseBtn && !lastPause && gameStarted && !isPaused && document.getElementById('menuOverlay').style.display!=='flex') { pauseOverlay.style.display='flex'; isPaused=true; } lastPause = pauseBtn; }
+
+window.addEventListener('load',()=>{
+    loadProgress(); loadAccount(); loadSettings(); initMusic();
+    const data=generateLevel(1,GAME_WIDTH,GAME_HEIGHT); finishX=data.finishX; enemies=data.enemies; coins=data.coins; meat=data.meat; laserEnemies=data.laserEnemies; resetPlayer();
+    function gameLoop(){ draw(); requestAnimationFrame(gameLoop); } gameLoop();
+    setInterval(()=>{ if(gameStarted && !isPaused) update(); handleGamepad(); }, 16);
+    canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); mouseX = (e.clientX - rect.left) * (GAME_WIDTH/rect.width); mouseY = (e.clientY - rect.top) * (GAME_HEIGHT/rect.height); });
+    canvas.addEventListener('mousedown', (e) => { if(e.button===0) attack(); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); const rect = canvas.getBoundingClientRect(); const touch = e.touches[0]; mouseX = (touch.clientX - rect.left) * (GAME_WIDTH/rect.width); mouseY = (touch.clientY - rect.top) * (GAME_HEIGHT/rect.height); });
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); attack(); });
+    
+    document.getElementById('newGameBtn').onclick = () => { if (maxUnlockedLevel > 1) { document.getElementById('newGameWarningOverlay').style.display = 'flex'; } else { showInstructionBeforeNewGame(); } };
+    document.getElementById('confirmNewGameBtn').onclick = () => { document.getElementById('newGameWarningOverlay').style.display = 'none'; showInstructionBeforeNewGame(); };
+    document.getElementById('cancelNewGameBtn').onclick = () => { document.getElementById('newGameWarningOverlay').style.display = 'none'; };
+    document.getElementById('loadGameBtn').onclick=()=>applySavedGame();
+    document.getElementById('levelSelectMenuBtn').onclick=()=>{ renderLevelSelect(); document.getElementById('levelSelectOverlay').style.display='flex'; };
+    document.getElementById('closeLevelSelectBtn').onclick=()=>{ document.getElementById('levelSelectOverlay').style.display='none'; };
+    document.getElementById('startTutorialBtn').onclick = () => { document.getElementById('instructionOverlay').style.display = 'none'; resetAndNewGame(); };
+    document.getElementById('moreMenuBtn').onclick=()=>{ document.getElementById('moreOverlay').style.display='flex'; };
+    document.getElementById('closeMoreBtn').onclick=()=>{ document.getElementById('moreOverlay').style.display='none'; };
+    document.getElementById('restartBtn').onclick=()=>{ resetAndNewGame(); winOverlay.style.display='none'; };
+    document.getElementById('resumeBtn').onclick=()=>{ pauseOverlay.style.display='none'; isPaused=false; updateMobilePauseButtonVisibility(); };
+    document.getElementById('exitToMenuBtn').onclick=()=>{ pauseOverlay.style.display='none'; isPaused=false; gameStarted=false; document.getElementById('menuOverlay').style.display='flex'; updateCornerButtonsVisibility(); updateMobilePauseButtonVisibility(); };
+    document.getElementById('saveGamePauseBtn').onclick=()=>{ if(gameStarted){ saveProgressToLocal(); showToast('Игра сохранена'); } };
+    document.getElementById('musicVolume').oninput=(e)=>{ settings.musicVolume=e.target.value/100; if(bgAudio) bgAudio.volume=settings.musicVolume; saveSettings(); };
+    document.querySelectorAll('.mode-btn').forEach(btn=>{ btn.onclick=()=>{ settings.controlMode=btn.dataset.mode; saveSettings(); updateModeButtonsUI(); applyVirtualController(); updateMobilePauseButtonVisibility(); }; });
+    document.getElementById('mobilePauseBtn').onclick=togglePauseFromMobile;
+    document.getElementById('accountCornerBtn').onclick=()=>{ if(document.getElementById('menuOverlay').style.display==='flex' && !gameStarted){ updateAccountStatsUI(); updateAvatarAndDisplay(); accountOverlay.style.display='flex'; } };
+    document.getElementById('saveAccountBtn').onclick=()=>{ applyAccountChanges(); accountOverlay.style.display='none'; if(gameStarted) isPaused=false; updateCornerButtonsVisibility(); updateMobilePauseButtonVisibility(); };
+    document.getElementById('closeAccountBtn').onclick=()=>{ accountOverlay.style.display='none'; if(gameStarted) isPaused=false; };
+    document.getElementById('inviteCornerBtn').onclick=async()=>{ const text="Присоединяйся в Blue Fighter прямо сейчас https://t.me/BlueFighterBot"; try{ await navigator.clipboard.writeText(text); showToast('Ссылка скопирована!'); }catch(e){ showToast('Ошибка копирования', true); } };
+    document.getElementById('closeInternetWarningBtn').onclick=()=>{ document.getElementById('noInternetOverlay').style.display='none'; };
+    document.getElementById('storeMenuBtn').onclick=()=>{ renderStore(); document.getElementById('storeOverlay').style.display='flex'; };
+    document.getElementById('closeStoreBtn').onclick=()=>{ document.getElementById('storeOverlay').style.display='none'; };
+    document.getElementById('closeStardropBtn').onclick=()=>{ document.getElementById('stardropOverlay').style.display='none'; };
+    window.addEventListener('keydown', (e) => { if (e.code === 'Escape' && gameStarted && !isPaused && document.getElementById('menuOverlay').style.display !== 'flex' && storeOverlay.style.display !== 'flex' && levelSelectOverlay.style.display !== 'flex' && document.getElementById('moreOverlay').style.display !== 'flex') { e.preventDefault(); if (pauseOverlay.style.display === 'flex') { pauseOverlay.style.display = 'none'; isPaused = false; } else { pauseOverlay.style.display = 'flex'; isPaused = true; } updateMobilePauseButtonVisibility(); } });
+    window.addEventListener('keydown',e=>keys[e.code]=true); window.addEventListener('keyup',e=>keys[e.code]=false);
+    document.getElementById('ctrlLeft').addEventListener('touchstart',e=>{ e.preventDefault(); vLeft=true; }); document.getElementById('ctrlLeft').addEventListener('touchend',e=>{ e.preventDefault(); vLeft=false; });
+    document.getElementById('ctrlRight').addEventListener('touchstart',e=>{ e.preventDefault(); vRight=true; }); document.getElementById('ctrlRight').addEventListener('touchend',e=>{ e.preventDefault(); vRight=false; });
+    document.getElementById('ctrlJump').addEventListener('click',()=>{ if(gameStarted && !isPaused && player.isGrounded) player.vy=player.jumpPower; });
+    document.getElementById('ctrlAttack').addEventListener('click',attack);
+    updateCornerButtonsVisibility(); updateMobilePauseButtonVisibility(); buildEmojiGrid();
+    document.getElementById('editAvatarBtn')?.addEventListener('click',()=>{ document.getElementById('avatarPickerOverlay').style.display='flex'; });
+    document.getElementById('closeAvatarPickerBtn')?.addEventListener('click',()=>{ document.getElementById('avatarPickerOverlay').style.display='none'; });
+    document.getElementById('avatarBgColor')?.addEventListener('input',(e)=>{ avatarBgColor=e.target.value; localStorage.setItem('avatarBgColor',avatarBgColor); updateAvatarUI(); });
+    updateAvatarAndDisplay();
+    const hiddenColorInput=document.createElement('input'); hiddenColorInput.type='color'; hiddenColorInput.style.display='none'; document.body.appendChild(hiddenColorInput);
+    document.getElementById('changeNameColorBtn')?.addEventListener('click',()=>{ hiddenColorInput.value=account.nameColor; hiddenColorInput.click(); });
+    hiddenColorInput.addEventListener('input',(e)=>{ account.nameColor=e.target.value; saveAccount(); updateAvatarAndDisplay(); });
+});
+
+(function() {
+    if (window.soundEffectsLoaded) return; window.soundEffectsLoaded = true;
+    let audioCtx = null; let soundEnabled = true; let sfxVolume = 0.5;
+    function initAudio() { if (audioCtx) return; audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const resumeAudio = () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); document.removeEventListener('click', resumeAudio); document.removeEventListener('touchstart', resumeAudio); }; document.addEventListener('click', resumeAudio); document.addEventListener('touchstart', resumeAudio); }
+    function playTone(type, frequency, duration, volumeMul = 1, delay = 0) { if (!audioCtx || !soundEnabled) return; const now = audioCtx.currentTime + delay; const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(sfxVolume * volumeMul * 0.3, now + 0.01); gain.gain.exponentialRampToValueAtTime(0.0001, now + duration); gain.connect(audioCtx.destination); const osc = audioCtx.createOscillator(); osc.type = type; osc.frequency.value = frequency; osc.connect(gain); osc.start(now); osc.stop(now + duration); }
+    const sounds = { coin: () => playTone('sine', 880, 0.15, 0.8), meat: () => playTone('sine', 440, 0.2, 0.7), attack: () => playTone('triangle', 300, 0.08, 0.6), shoot: () => playTone('sawtooth', 200, 0.12, 0.9), explosion: () => { playTone('noise', 80, 0.25, 0.9); playTone('sine', 120, 0.3, 0.5); }, damage: () => playTone('square', 180, 0.25, 0.8), laser: () => { if (!audioCtx) return; const now = audioCtx.currentTime; const gain = audioCtx.createGain(); gain.gain.setValueAtTime(sfxVolume * 0.6, now); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); gain.connect(audioCtx.destination); const osc = audioCtx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = 600; osc.frequency.exponentialRampToValue(200, now + 0.2); osc.connect(gain); osc.start(now); osc.stop(now + 0.3); }, levelUp: () => { playTone('sine', 523, 0.2, 0.7); setTimeout(() => playTone('sine', 659, 0.2, 0.7), 150); setTimeout(() => playTone('sine', 784, 0.3, 0.7), 300); }, buy: () => { playTone('sine', 660, 0.1, 0.9); setTimeout(() => playTone('sine', 880, 0.15, 0.9), 100); }, freeze: () => { playTone('sine', 720, 0.25, 0.6); setTimeout(() => playTone('triangle', 380, 0.2, 0.5), 100); } };
+    window.playSound = function(name, delayMs = 0) { initAudio(); if (!audioCtx || audioCtx.state !== 'running') return; const fn = sounds[name]; if (fn) setTimeout(fn, delayMs); };
+    const originalCreateExplosion = window.createExplosion; window.createExplosion = function(cx, cy) { if (originalCreateExplosion) originalCreateExplosion(cx, cy); window.playSound('explosion', 20); };
+    const originalAttackWithWeapon = window.attackWithWeapon; if (originalAttackWithWeapon) { window.attackWithWeapon = function(aimX, aimY) { originalAttackWithWeapon(aimX, aimY); if (window.currentWeapon === 'ice') window.playSound('freeze', 10); else if (window.currentWeapon === 'meat') window.playSound('shoot'); else if (window.currentWeapon === 'bomb') window.playSound('explosion'); else window.playSound('attack'); }; }
+    const originalLoseLife = window.loseLife; if (originalLoseLife) { window.loseLife = function() { originalLoseLife(); window.playSound('damage'); }; }
+    function addSfxVolumeSlider() { const settingsDiv = document.querySelector('#accountOverlay .profile-settings'); if (!settingsDiv) return; if (document.getElementById('sfxVolume')) return; const sliderHtml = `<div class="slider-container" style="color: #38bdf8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top:20px;">Эффекты<input type="range" id="sfxVolume" min="0" max="100" value="${sfxVolume * 100}"></div>`; settingsDiv.insertAdjacentHTML('beforeend', sliderHtml); const sfxSlider = document.getElementById('sfxVolume'); if (sfxSlider) sfxSlider.addEventListener('input', (e) => { sfxVolume = e.target.value / 100; localStorage.setItem('sfxVolume', sfxVolume); }); const saved = localStorage.getItem('sfxVolume'); if (saved !== null) sfxVolume = parseFloat(saved); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addSfxVolumeSlider); else addSfxVolumeSlider();
+    document.body.addEventListener('click', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true }); document.body.addEventListener('touchstart', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true }); setTimeout(() => initAudio(), 100);
+})();
+</script>
+</body>
+</html>
